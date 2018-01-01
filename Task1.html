@@ -1,0 +1,146 @@
+<html>
+<head>
+    <title>Implementation of  OMDb API</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!--Required JQuery Library-->
+    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	
+	<!--Custom Css-->
+	<style>
+	.absolute-center {
+		  margin: auto;
+		  top:0;
+		  left: 0; 
+		  bottom: 0; 
+		  right: 0;
+		  display:none;
+		  word-wrap: break-word;
+		  z-index: 4;
+		}
+	</style>
+    <!-- Custom Script-->
+    <script>
+	var url = "";
+	function SearchByTitle() {
+		var title = document.getElementById('searchByTitle').value;
+        if (title) {
+			document.getElementById("searchByTitle").style.borderColor = "#ccc";
+            url = "http://www.omdbapi.com/?apikey=880ba943&s=" + title;
+			RequestToApi(url,"Search");
+		}
+		else{
+			document.getElementById("searchByTitle").style.borderColor = "red";
+		}
+	}
+	
+	function Details(imdbID){
+		url = "http://www.omdbapi.com/?apikey=880ba943&i=" + imdbID.alt;
+		RequestToApi(url,"Details");
+	}
+	
+	function RequestToApi(url,type){
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var response = this.responseText;
+				var jsonObject = JSON.parse(response);
+				 
+				if(type == "Search")
+					ShowSearchResult(jsonObject);
+				else if(type == "Details")
+					ShowDetailsResult(jsonObject);
+			}
+		};
+		xhttp.open("GET", url, true);
+		xhttp.send();
+	}
+	
+	function ShowSearchResult(jsonObject){
+		var moviesListHtml = "";
+		$.each(jsonObject.Search, function (key, value) {
+		moviesListHtml += "<div class='col-md-4'>";
+		moviesListHtml += "<div class='panel panel-default'>";
+			moviesListHtml += "<div class='panel-heading'> Title : <b>" + value.Title + "</b></div>";
+			moviesListHtml += "<div class='panel-body'>";
+				moviesListHtml += "<img src='" + value.Poster + "' onclick='Details(this)' alt='" + value.imdbID + "' width='100px' height='100px' class='pull-right' />";
+				moviesListHtml += "<div class='col-md-6'><label> Year : </label> " + value.Year + "<br/>"; 
+				moviesListHtml += "<label> iMDB ID : </label> " + value.imdbID + "<br/>";
+				moviesListHtml += "<label> Type : </label> " + value.Type + "<br/></div>";
+			moviesListHtml += "</div>";
+			moviesListHtml += "<div class='panel-footer' center> Please click on picture to get details </div>";
+		moviesListHtml += "</div></div>";
+		});
+		document.getElementById("SearchMoviesList").innerHTML = moviesListHtml;
+	}	
+	
+	function ShowDetailsResult(jsonObject){
+	 
+		$(".modal .modal-title").html("Movie Details");
+		var bodyHtml="";
+		$.each(jsonObject, function (key, value) {
+			if(key != "Ratings")
+				bodyHtml += "<label> "+ key +" : </label> " + value + "<br/>"; 
+			else
+			{
+				bodyHtml += "<label> "+ key +" : </label> <br/>"; 
+				$.each(value, function (k, v) {
+					bodyHtml += "<label> Source : </label> " + v.Source + "<br/>"; 
+					bodyHtml += "<label> Value : </label> " + v.Value + "<br/>";
+				});
+			}
+		});
+          $(".modal .modal-body").html(bodyHtml);
+          $(".modal").modal("show");
+          
+	}
+	
+	function CloseDetails(){
+		document.getElementById("details_result").style.display = 'none';
+	}
+	</script>
+	
+</head>
+<body>
+    <center><h2>JavaScript test</h2></center>
+    <hr />
+    <br />
+    <div class="col-md-12">
+        <div class="col-md-2">
+            <h4>Search Movie By Title : </h4>
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control" id="searchByTitle" />
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-default" onclick="SearchByTitle()" id="submitButton" >Search</button>
+        </div>
+    </div>
+    <div class="clearfix"></div><br /><hr /><br />	
+	<div class="col-md-4 pull-right absolute-center" id="details_result"></div>
+	<div class="col-md-12" style="position: absolute;" id="SearchMoviesList"></div>
+	
+	<!-- Modal -->
+    <div class="modal fade" id="movieDetailsModal" tabindex="-1" role="dialog"  >
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"></h4>
+                </div>
+                <div class="modal-body" style="overflow: scroll; height:80%;width:100%;">
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
